@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpectreChat - Clean & Modern Messaging</title>
+  
+  <!-- Inter & Plus Jakarta Sans Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth, friendly custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(107, 114, 128, 0.7);
+    }
+
+    /* Message animation */
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-message {
+      animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Typing bounce */
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-4px); opacity: 1; }
+    }
+    .typing-dot-1 { animation: typingBounce 1.3s infinite ease-in-out; }
+    .typing-dot-2 { animation: typingBounce 1.3s infinite ease-in-out 0.2s; }
+    .typing-dot-3 { animation: typingBounce 1.3s infinite ease-in-out 0.4s; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans h-screen flex flex-col overflow-hidden transition-colors duration-200">
+
+  <!-- ======================================================== -->
+  <!-- 1. APPLICATION HEADER                                    -->
+  <!-- ======================================================== -->
+  <header class="h-16 flex-none bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between z-30 shadow-xs">
+    
+    <!-- Left: Mobile Menu & App Branding -->
+    <div class="flex items-center space-x-3">
+      <button id="mobileMenuBtn" aria-label="Open sidebar" class="p-2 -ml-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <!-- App Logo -->
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-sm shadow-brand-500/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">SpectreChat</h1>
+          <p class="text-[11px] text-slate-400 dark:text-slate-400 font-medium">Simple & Real-time</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Theme Switcher & User Profile Indicator -->
+    <div class="flex items-center space-x-3">
+      
+      <!-- Light / Dark Mode Toggle -->
+      <button id="themeToggleBtn" aria-label="Toggle theme" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <!-- Sun Icon (shown in dark mode) -->
+        <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <!-- Moon Icon (shown in light mode) -->
+        <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+      </button>
+
+      <div class="h-5 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+
+      <!-- User Profile Indicator -->
+      <div class="flex items-center space-x-3 pl-1">
+        <div class="relative">
+          <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-semibold text-sm border-2 border-white dark:border-slate-800 shadow-xs">
+            AC
+          </div>
+          <!-- Online indicator -->
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+        </div>
+        <div class="hidden sm:block text-left">
+          <div class="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-tight">Alex Cooper</div>
+          <div class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Active now</div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN WORKSPACE                                           -->
+  <!-- ======================================================== -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- ====================================================== -->
+    <!-- 2. SIDEBAR: CONVERSATIONS & CHANNELS                   -->
+    <!-- ====================================================== -->
+    <aside id="sidebarNav" class="w-72 sm:w-80 flex-none bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-200 ease-in-out z-20 absolute md:static inset-y-0 left-0 -translate-x-full md:translate-x-0 shadow-lg md:shadow-none">
+      
+      <!-- Search Conversations -->
+      <div class="p-3.5 border-b border-slate-100 dark:border-slate-800/80">
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search conversations..." 
+            class="w-full pl-9 pr-3 py-1.5 bg-slate-100 dark:bg-slate-800/70 border border-transparent focus:border-brand-500 dark:focus:border-brand-500 text-sm rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Conversations Scroll Area -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-6" id="conversationList">
+        
+        <!-- Channels Section -->
+        <div>
+          <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+            Channels
+          </div>
+          <div class="space-y-1" id="channelsContainer">
+            <!-- Channel: General (Active) -->
+            <button data-id="general" class="conv-btn active-conv w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition-colors bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 font-medium">
+              <div class="flex items-center space-x-3 min-w-0">
+                <span class="w-7 h-7 rounded-lg bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 flex items-center justify-center font-semibold text-sm">#</span>
+                <div class="truncate">
+                  <div class="text-sm font-semibold truncate">general</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate">Company-wide updates & chat</div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Channel: Team Support -->
+            <button data-id="team-support" class="conv-btn w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300">
+              <div class="flex items-center space-x-3 min-w-0">
+                <span class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center font-semibold text-sm">#</span>
+                <div class="truncate">
+                  <div class="text-sm font-semibold truncate">team-support</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate">Helpdesk & quick questions</div>
+                </div>
+              </div>
+              <span class="unread-pill px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-600 text-white">2</span>
+            </button>
+
+            <!-- Channel: Announcements -->
+            <button data-id="announcements" class="conv-btn w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300">
+              <div class="flex items-center space-x-3 min-w-0">
+                <span class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center font-semibold text-sm">📢</span>
+                <div class="truncate">
+                  <div class="text-sm font-semibold truncate">announcements</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate">Quarterly product roadmap</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct Messages Section -->
+        <div>
+          <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+            Direct Messages
+          </div>
+          <div class="space-y-1" id="dmsContainer">
+            <!-- DM: Sarah Jenkins -->
+            <button data-id="sarah-jenkins" class="conv-btn w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300">
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="relative flex-none">
+                  <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-semibold text-xs">
+                    SJ
+                  </div>
+                  <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-900"></span>
+                </div>
+                <div class="truncate">
+                  <div class="text-sm font-semibold truncate">Sarah Jenkins</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate">Designs are ready for review!</div>
+                </div>
+              </div>
+              <span class="unread-pill px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-600 text-white">1</span>
+            </button>
+
+            <!-- DM: Marcus Vance -->
+            <button data-id="marcus-vance" class="conv-btn w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300">
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="relative flex-none">
+                  <div class="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center font-semibold text-xs">
+                    MV
+                  </div>
+                  <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-slate-400 ring-1 ring-white dark:ring-slate-900"></span>
+                </div>
+                <div class="truncate">
+                  <div class="text-sm font-semibold truncate">Marcus Vance</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 truncate">See you tomorrow morning.</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- User footer indicator on mobile -->
+      <div class="p-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+        <span>Connected to SpectreChat Cloud</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      </div>
+
+    </aside>
+
+    <!-- Mobile sidebar backdrop -->
+    <div id="mobileBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-10 hidden md:hidden"></div>
+
+    <!-- ====================================================== -->
+    <!-- 3. MAIN CHAT VIEW                                      -->
+    <!-- ====================================================== -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-slate-950 relative">
+      
+      <!-- Current Conversation Header -->
+      <div class="h-14 flex-none bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between shadow-2xs">
+        <div class="flex items-center space-x-3 truncate">
+          <div class="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-semibold text-sm flex-none" id="activeIcon">
+            #
+          </div>
+          <div class="truncate">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate" id="activeConvTitle">
+              general
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 truncate" id="activeConvSubtitle">
+              Company-wide updates, discussions, and friendly watercooler chat
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Header Actions -->
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <button id="clearChatBtn" title="Clear current messages" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Scroll Feed -->
+      <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-4 scroll-smooth">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <!-- Live Typing Indicator -->
+      <div id="typingBar" class="px-6 py-2 transition-all duration-150 hidden bg-transparent">
+        <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div class="flex space-x-1 items-center px-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 typing-dot-1"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 typing-dot-2"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 typing-dot-3"></span>
+          </div>
+          <span id="typingText">Someone is typing...</span>
+        </div>
+      </div>
+
+      <!-- ==================================================== -->
+      <!-- 4. INPUT AREA                                        -->
+      <!-- ==================================================== -->
+      <div class="p-3 sm:p-5 flex-none bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+        <form id="chatForm" class="flex items-end gap-2 max-w-4xl mx-auto">
+          
+          <!-- Attachment placeholder button -->
+          <button type="button" id="attachBtn" title="Attach file" class="p-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-none">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+            </svg>
+          </button>
+
+          <!-- Input Textarea / Box -->
+          <div class="flex-1 relative bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-transparent focus-within:border-brand-500 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+            <textarea 
+              id="messageInput" 
+              rows="1" 
+              placeholder="Write a message... (Press Enter to send)" 
+              class="w-full bg-transparent text-sm sm:text-base text-slate-800 dark:text-slate-100 placeholder-slate-400 px-4 py-3 focus:outline-none resize-none max-h-32 leading-relaxed"
+            ></textarea>
+          </div>
+
+          <!-- Send Button -->
+          <button 
+            type="submit" 
+            id="sendBtn" 
+            class="p-3 sm:px-5 sm:py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 flex-none"
+            aria-label="Send message"
+          >
+            <span class="hidden sm:inline">Send</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+
+        </form>
+
+        <div class="max-w-4xl mx-auto flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-3 pt-2">
+          <span>Tip: Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for a new line</span>
+          <span class="hidden sm:inline">End-to-end encrypted • Instant sync</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 5. VANILLA JAVASCRIPT                                    -->
+  <!-- ======================================================== -->
+  <script>
+    /* --------------------------------------------------------
+       A. DATA STORE: CONVERSATIONS & PRE-POPULATED MESSAGES
+       -------------------------------------------------------- */
+    const conversations = {
+      'general': {
+        title: 'general',
+        subtitle: 'Company-wide updates, discussions, and friendly watercooler chat',
+        icon: '#',
+        messages: [
+          {
+            id: 'g1',
+            sender: 'Sarah Jenkins',
+            avatar: 'SJ',
+            avatarColor: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+            time: '10:14 AM',
+            isSelf: false,
+            text: 'Good morning everyone! Just pushed the updated onboarding illustrations. Let me know what you think.'
+          },
+          {
+            id: 'g2',
+            sender: 'Marcus Vance',
+            avatar: 'MV',
+            avatarColor: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+            time: '10:18 AM',
+            isSelf: false,
+            text: 'They look super clean, Sarah! The contrast and spacing make the steps so much easier to follow.'
+          },
+          {
+            id: 'g3',
+            sender: 'Alex Cooper',
+            avatar: 'AC',
+            avatarColor: 'bg-brand-600 text-white',
+            time: '10:22 AM',
+            isSelf: true,
+            text: 'Agreed! Love how effortless the new flow feels. Great job team.'
+          }
+        ]
+      },
+      'team-support': {
+        title: 'team-support',
+        subtitle: 'Internal helpdesk, onboarding questions, and IT assistance',
+        icon: '#',
+        messages: [
+          {
+            id: 'ts1',
+            sender: 'IT Helpdesk',
+            avatar: 'IT',
+            avatarColor: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+            time: '9:00 AM',
+            isSelf: false,
+            text: 'Welcome to Team Support! If you need workspace credentials or access to shared drives, drop a message here anytime.'
+          },
+          {
+            id: 'ts2',
+            sender: 'Marcus Vance',
+            avatar: 'MV',
+            avatarColor: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+            time: '9:45 AM',
+            isSelf: false,
+            text: 'Hey team, quick question: where can I request the new Figma design token library?'
+          }
+        ]
+      },
+      'announcements': {
+        title: 'announcements',
+        subtitle: 'Important company news and product milestones',
+        icon: '📢',
+        messages: [
+          {
+            id: 'a1',
+            sender: 'Leadership Team',
+            avatar: 'LT',
+            avatarColor: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+            time: 'Yesterday',
+            isSelf: false,
+            text: '🎉 Excited to announce that SpectreChat reached 50,000 active daily teams this week! Huge thank you to everyone for making this happen.'
+          }
+        ]
+      },
+      'sarah-jenkins': {
+        title: 'Sarah Jenkins',
+        subtitle: 'Product Designer • Active now',
+        icon: 'SJ',
+        messages: [
+          {
+            id: 'sj1',
+            sender: 'Sarah Jenkins',
+            avatar: 'SJ',
+            avatarColor: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+            time: '11:05 AM',
+            isSelf: false,
+            text: 'Hey Alex! Do you have 5 minutes to review the mobile navigation drawer prototype?'
+          }
+        ]
+      },
+      'marcus-vance': {
+        title: 'Marcus Vance',
+        subtitle: 'Backend Engineer • Away',
+        icon: 'MV',
+        messages: [
+          {
+            id: 'mv1',
+            sender: 'Marcus Vance',
+            avatar: 'MV',
+            avatarColor: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+            time: 'Yesterday',
+            isSelf: false,
+            text: 'The WebSocket gateway migration went smoothly last night. Latency is down by 35% across all regions.'
+          }
+        ]
+      }
+    };
+
+    let activeId = 'general';
+
+    /* --------------------------------------------------------
+       B. DOM REFERENCES
+       -------------------------------------------------------- */
+    const messagesContainer = document.getElementById('messagesContainer');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    const activeConvTitle = document.getElementById('activeConvTitle');
+    const activeConvSubtitle = document.getElementById('activeConvSubtitle');
+    const activeIcon = document.getElementById('activeIcon');
+    const typingBar = document.getElementById('typingBar');
+    const typingText = document.getElementById('typingText');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebarNav = document.getElementById('sidebarNav');
+    const mobileBackdrop = document.getElementById('mobileBackdrop');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const searchInput = document.getElementById('searchInput');
+    const attachBtn = document.getElementById('attachBtn');
+
+    /* --------------------------------------------------------
+       C. RENDER MESSAGES
+       -------------------------------------------------------- */
+    function renderMessages() {
+      const conv = conversations[activeId];
+      if (!conv) return;
+
+      messagesContainer.innerHTML = '';
+
+      conv.messages.forEach(msg => {
+        const node = createMessageElement(msg);
+        messagesContainer.appendChild(node);
+      });
+
+      scrollToBottom();
+    }
+
+    function createMessageElement(msg) {
+      const wrap = document.createElement('div');
+      wrap.className = 'flex flex-col space-y-1 animate-message';
+
+      if (msg.isSelf) {
+        // Outgoing message (Right-aligned, Blue Bubble)
+        wrap.innerHTML = `
+          <div class="flex justify-end items-end space-x-2 ml-10 sm:ml-20">
+            <div class="flex flex-col items-end max-w-lg">
+              <div class="bg-brand-600 text-white rounded-2xl rounded-br-xs px-4 py-2.5 shadow-xs text-sm sm:text-[15px] leading-relaxed break-words">
+                ${escapeHtml(msg.text)}
+              </div>
+              <div class="flex items-center space-x-1 mt-1 mr-1 text-[11px] text-slate-400">
+                <span>${msg.time}</span>
+                <span>•</span>
+                <span class="text-brand-600 dark:text-brand-400 font-semibold">Sent</span>
+                <svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Incoming message (Left-aligned, Card Bubble with Avatar)
+        wrap.innerHTML = `
+          <div class="flex justify-start items-start space-x-3 mr-10 sm:mr-20">
+            <div class="w-8 h-8 rounded-full ${msg.avatarColor} flex items-center justify-center font-semibold text-xs flex-none mt-0.5 shadow-2xs">
+              ${msg.avatar}
+            </div>
+            <div class="flex flex-col items-start max-w-lg">
+              <div class="flex items-center space-x-2 mb-1 ml-0.5">
+                <span class="text-xs font-semibold text-slate-900 dark:text-slate-200">${escapeHtml(msg.sender)}</span>
+                <span class="text-[11px] text-slate-400 dark:text-slate-400">${msg.time}</span>
+              </div>
+              <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-xs px-4 py-2.5 shadow-2xs text-sm sm:text-[15px] leading-relaxed break-words">
+                ${escapeHtml(msg.text)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return wrap;
+    }
+
+    function scrollToBottom() {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getCurrentTimeString() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+
+    /* --------------------------------------------------------
+       D. SEND MESSAGE LOGIC
+       -------------------------------------------------------- */
+    function handleSendMessage(e) {
+      if (e) e.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      const userMsg = {
+        id: 'msg_' + Date.now(),
+        sender: 'Alex Cooper',
+        avatar: 'AC',
+        avatarColor: 'bg-brand-600 text-white',
+        time: getCurrentTimeString(),
+        isSelf: true,
+        text: text
+      };
+
+      conversations[activeId].messages.push(userMsg);
+      renderMessages();
+
+      messageInput.value = '';
+      adjustTextareaHeight();
+      messageInput.focus();
+
+      // Trigger realistic friendly simulated reply
+      simulateResponse(text);
+    }
+
+    function simulateResponse(userText) {
+      const conv = conversations[activeId];
+      if (!conv) return;
+
+      // Select an appropriate respondent based on conversation
+      let responder = 'Sarah Jenkins';
+      let avatar = 'SJ';
+      let avatarColor = 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
+
+      if (activeId === 'team-support') {
+        responder = 'Support Bot';
+        avatar = 'SB';
+        avatarColor = 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300';
+      } else if (activeId === 'marcus-vance') {
+        responder = 'Marcus Vance';
+        avatar = 'MV';
+        avatarColor = 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
+      }
+
+      // Show typing indicator
+      showTyping(`${responder} is typing...`);
+
+      setTimeout(() => {
+        hideTyping();
+
+        let replyText = '';
+        const lower = userText.toLowerCase();
+
+        if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+          replyText = `Hey Alex! Hope you are having a productive day. How can I help?`;
+        } else if (lower.includes('review') || lower.includes('design') || lower.includes('figma')) {
+          replyText = `Looks fantastic! The clean hierarchy and rounded cards feel super intuitive.`;
+        } else if (lower.includes('thank') || lower.includes('thanks')) {
+          replyText = `You're very welcome! Always happy to collaborate.`;
+        } else if (activeId === 'team-support') {
+          replyText = `Ticket received! Our team is reviewing this and will follow up shortly.`;
+        } else {
+          const friendlyReplies = [
+            `Sounds great, thanks for keeping me in the loop!`,
+            `Got it! I will take a look right now and follow up.`,
+            `Perfect. That aligns with what we discussed in the sync.`,
+            `Appreciate the update! Let me know if you need anything from my end.`
+          ];
+          replyText = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
+        }
+
+        const replyMsg = {
+          id: 'rep_' + Date.now(),
+          sender: responder,
+          avatar: avatar,
+          avatarColor: avatarColor,
+          time: getCurrentTimeString(),
+          isSelf: false,
+          text: replyText
+        };
+
+        conv.messages.push(replyMsg);
+        renderMessages();
+      }, 1600);
+    }
+
+    function showTyping(label) {
+      typingText.textContent = label;
+      typingBar.classList.remove('hidden');
+      scrollToBottom();
+    }
+
+    function hideTyping() {
+      typingBar.classList.add('hidden');
+    }
+
+    /* --------------------------------------------------------
+       E. AUTO-RESIZING TEXTAREA
+       -------------------------------------------------------- */
+    function adjustTextareaHeight() {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 128) + 'px';
+    }
+
+    messageInput.addEventListener('input', adjustTextareaHeight);
+
+    // Send on Enter (Shift+Enter for newline)
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    });
+
+    chatForm.addEventListener('submit', handleSendMessage);
+
+    /* --------------------------------------------------------
+       F. CONVERSATION SWITCHING
+       -------------------------------------------------------- */
+    document.querySelectorAll('.conv-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        if (!id || id === activeId) return;
+
+        // Update active UI classes
+        document.querySelectorAll('.conv-btn').forEach(b => {
+          b.classList.remove('active-conv', 'bg-brand-50', 'dark:bg-brand-500/10', 'text-brand-600', 'dark:text-brand-400');
+          b.classList.add('text-slate-700', 'dark:text-slate-300');
+        });
+
+        btn.classList.add('active-conv', 'bg-brand-50', 'dark:bg-brand-500/10', 'text-brand-600', 'dark:text-brand-400');
+        btn.classList.remove('text-slate-700', 'dark:text-slate-300');
+
+        // Clear unread pill
+        const unread = btn.querySelector('.unread-pill');
+        if (unread) {
+          unread.remove();
+        }
+
+        activeId = id;
+        const conv = conversations[id];
+
+        // Update header details
+        activeConvTitle.textContent = conv.title;
+        activeConvSubtitle.textContent = conv.subtitle;
+        activeIcon.textContent = conv.icon;
+
+        // Render conversation messages
+        renderMessages();
+
+        // Close mobile drawer if open
+        closeMobileSidebar();
+      });
+    });
+
+    /* --------------------------------------------------------
+       G. SEARCH CONVERSATIONS
+       -------------------------------------------------------- */
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.conv-btn').forEach(btn => {
+        const title = btn.querySelector('.font-semibold').textContent.toLowerCase();
+        if (title.includes(query)) {
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+    });
+
+    /* --------------------------------------------------------
+       H. CLEAR CHAT
+       -------------------------------------------------------- */
+    clearChatBtn.addEventListener('click', () => {
+      if (confirm('Clear messages in this conversation view?')) {
+        conversations[activeId].messages = [];
+        renderMessages();
+      }
+    });
+
+    /* --------------------------------------------------------
+       I. ATTACHMENT PLACEHOLDER
+       -------------------------------------------------------- */
+    attachBtn.addEventListener('click', () => {
+      messageInput.value = '[File attached: Project-Spec-v2.pdf] ';
+      messageInput.focus();
+      adjustTextareaHeight();
+    });
+
+    /* --------------------------------------------------------
+       J. MOBILE SIDEBAR DRAWER
+       -------------------------------------------------------- */
+    function openMobileSidebar() {
+      sidebarNav.classList.remove('-translate-x-full');
+      mobileBackdrop.classList.remove('hidden');
+    }
+
+    function closeMobileSidebar() {
+      sidebarNav.classList.add('-translate-x-full');
+      mobileBackdrop.classList.add('hidden');
+    }
+
+    mobileMenuBtn.addEventListener('click', () => {
+      if (sidebarNav.classList.contains('-translate-x-full')) {
+        openMobileSidebar();
+      } else {
+        closeMobileSidebar();
+      }
+    });
+
+    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+
+    /* --------------------------------------------------------
+       K. LIGHT / DARK THEME TOGGLE
+       -------------------------------------------------------- */
+    function setTheme(isDark) {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      setTheme(!isCurrentlyDark);
+    });
+
+    // Initial render
+    renderMessages();
+  </script>
+  <!-- ======================================================== -->
+  <!-- NEXCONN SDK INTEGRATION CODE                             -->
+  <!-- ======================================================== -->
+  <!-- 1. Include the Nexconn SDK library script (Replace with official SDK script URL from dashboard if needed) -->
+  <script src="https://sdk.nexconn.ai/v1/chat-sdk.js"></script>
+
+  <!-- 2. Initialize and hook up your credentials -->
+  <script>
+    // Your App Key from the Nexconn Console screenshot
+    const NEXCONN_APP_KEY = "m7ua80gbmcvgm";
+
+    // Initialize the chat client when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const nexconnClient = new NexconnChat({
+          appKey: NEXCONN_APP_KEY
+        });
+        console.log("Nexconn Chat SDK initialized successfully for Firewall Fantoms!");
+        
+        // Update UI connection status if you have an indicator
+        // document.getElementById('connection-status').textContent = "Connected to Nexconn";
+      } catch (error) {
+        console.error("Error initializing Nexconn SDK:", error);
+      }
+    });
+  </script>
+</body>
+</html>
